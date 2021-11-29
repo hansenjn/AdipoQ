@@ -1,6 +1,6 @@
 # ![AdipoQ](https://github.com/hansenjn/AdipoQ/blob/main/Webfiles/AdipoQ%20Logo.png?raw=true)
 
-A simple toolbox of ImageJ plugins for quantifying adipocyte morphology and function in tissues and in vitro.
+A simple toolbox of two ImageJ plugins for quantifying adipocyte morphology and function in tissues and in vitro.
 
 **Note:** If you are not seeing this readme file at https://github.com/hansenjn/AdipoQ/ please visit this page to get the most recent version of and information about AdipoQ.
 

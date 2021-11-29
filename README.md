@@ -9,7 +9,7 @@ A simple toolbox of ImageJ plugins for quantifying adipocyte morphology and func
 - AdipoQ_Analyzer_-…-SNAPSHOT.jar (Download latest release [here](https://github.com/hansenjn/AdipoQ_Analyzer/releases)): An ImageJ plugin to quantify objects (i.e., adipocytes, lipid droplets, nuclei) from a segmented image or a multi-channel image featuring at least one segmented chanenl.
 - R markdown templates for post-hoc analysis: Will be available here soon.
 
-Both tools are optimized for studying adipocytes in stained tissue or *in vitro* after immunofluorescent labeling. 
+All the tools are optimized for studying adipocytes in stained tissue or *in vitro* after immunofluorescent labeling. 
 
 ## How to use?
 

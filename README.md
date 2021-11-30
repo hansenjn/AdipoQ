@@ -13,7 +13,7 @@ All the tools are optimized for studying adipocytes in stained tissue or *in vit
 
 ## How to use?
 
-A comprehensive User Guide is available [here]().
+A comprehensive User Guide is available [here](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20211130.pdf).
 
 ## How to cite?
 

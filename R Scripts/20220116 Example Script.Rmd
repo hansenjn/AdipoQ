@@ -1,0 +1,480 @@
+---
+title: "AdipoQ - in vitro assay analysis"
+author: "Jan N Hansen & Katharina Sieckmann"
+date: "05/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load librarys
+```{r load}
+library(data.table)
+library(readxl)
+library(readr)
+library("ggplot2")
+library(tidyr)
+library("openxlsx")
+library(matrixStats)
+library(ggpubr)
+library(broom)
+```
+
+## Define file path
+Define here the path to a folder where tables created by the R script will be automatically saved.
+```{r}
+outputpath = "FILEPATH/TO/RESULTS/"
+```
+
+## Define filenames
+Define here an excel sheet that provides a list containing file names that should be read in and additional annotations that allow to later on match files belonging to the same experimental condition. To see an example "Link series" file, please visit https://github.com/hansenjn/AdipoQ/tree/main/R%20Scripts.
+
+As expID, you can provide a uique identifier for the particular analysis that you are running here. This identifier will be written into the filenames of all output files, allowing you to label them uniquely and clearly.
+
+```{r}
+Link_Series <- read_excel("FILEPATH/To/LinkSeries/Example Link series.xlsx", sheet = "plate")
+head(Link_Series)
+expID = "XYZ"
+```
+
+
+
+# 1 - Calculate proliferation parameters (total nuclei content and number of Ki-67+ nuclei)
+We start here with analyzing the nuclei. To this end we need to import output files from an analysis of the DAPI channel.
+
+## Create file list
+The following chunk will create a list of the AdipoQ Analyzer output files that will be imported. The datapath refers to the folder were all the output files are stored. Note that you should store all output files that you aim to import in this folder. Adapt the datapath variable according to your folder structure to refer to the folder containing the AdipoQ Analyzer output files from analysis of the lipid marker channel.
+
+We always processed the images with the SharpestPlane plugin (see manual). Thus we create the filenames of files to be analyzed based on adding the suffix "_Sh_s" and the series number (variable Link_Series$ID). In case you did not use this tool, remove that part from the paste0 function below and also in all other chunks where additional data are imported.
+
+```{r}
+datapath = "FILEPATH/TO/ADIPOQ-OUTPUT-FILES-DAPI/"
+
+Link_Series$files = paste0(Link_Series$Plate, "_Sh_s", (Link_Series$ID), "_AQP_AQAs.txt")
+
+## Remove files that are marked to be excluded from the list
+Link_Series[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F),6]
+
+files = Link_Series$files
+files = files[!files %in% Link_Series$files[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F)]]
+
+## Do remaining files exist?
+table(file.exists(paste0(datapath,files)))
+
+## Remove files that do not exist from the list
+files = files[file.exists(paste0(datapath,files))] 
+
+## remaining files
+files
+```
+
+## Read in column labels
+Depending on the analysis settings and AdipoQ version, the column labels may vary. We read in the labels of each column from the first file in the file list and output them as a note in this chunk.
+
+```{r}
+colLabels <- data.frame(read.delim(paste0(datapath, files[1]), header=FALSE, comment.char="#"))[1,1:48]
+colLabels <- gsub(" \\[micron\\]","",gsub(" \\[micron\\^2\\]","",gsub(":","",as.character(unlist(colLabels)))))
+colLabels
+```
+
+## Load, convolve and save data (DAPI)
+Think chunk opens each listed AdipoQ analyzer output file (ending AQA_s) and merges all files to one big table containing the data from all files. In this table, one additional column is added that describes the filename where the data came from (called "file"). This allows to track back later from which file the data came.
+
+```{r}
+Data.DAPI <- data.frame(read_delim(paste0(datapath, files[1]), "\t", escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:48]
+
+Data.DAPI <- Data.DAPI[,]
+colnames(Data.DAPI) <- colLabels
+Data.DAPI$file <- files[1]
+#AllData$plate <- as.character(Link_Series[Link_Series$files==files[1],1])
+Data.DAPI$condition <- as.character(Link_Series[Link_Series$files==files[1],3])
+Data.DAPI$replicate <- as.character(Link_Series[Link_Series$files==files[1],4])
+
+for(id in files[2:length(files)]){
+  Data.Add.DAPI <- data.frame(read_delim(paste0(datapath, id), "\t", 
+                                 escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:48]
+ Data.Add.DAPI <- Data.Add.DAPI[,]
+  colnames(Data.Add.DAPI) <- colLabels
+  Data.Add.DAPI$file <- id
+  Data.Add.DAPI$condition <- as.character(Link_Series[Link_Series$files==id,3])
+  Data.Add.DAPI$replicate <- as.character(Link_Series[Link_Series$files==id,4])
+  
+  Data.DAPI <- rbind(Data.DAPI, Data.Add.DAPI)
+}
+
+head(Data.DAPI)
+```
+
+The AdipoQ Analyzer file contains some columns whose information is irrelevant for the analysis. In this chunk a list of parameters is created (variable called "cols") that contains only the for us interesting parameters. You may exclude more or less parametrs.
+```{r}
+cols <- colnames(Data.DAPI)
+cols <- cols[cols!= "Frame"]
+cols <- cols[cols!= "Custom"]
+cols <- cols[cols!= "Center X"]
+cols <- cols[cols!= "Center Y"]
+cols <- cols[cols!= "Center Z"]
+cols <- cols[cols!= "Voxels"]
+cols <- cols[cols!= "Outline"]
+cols <- cols[cols!= "Total.frames"]
+cols
+```
+
+In the following chunk the maximum number of adipocytes per condition is calculated and saved in the parameter "max". This is only revelant for later on creating output tables and does not need to be customized.
+```{r}
+max = 0;
+Conditions <- unique(Data.DAPI$condition)
+for(id in Conditions){
+  if(length(Data.DAPI[Data.DAPI$condition == id,1])>max){
+    max = length(Data.DAPI[Data.DAPI$condition ==id,1])
+  }
+}
+max
+```
+
+This chunk determines the maximum object ID for each image, referring to the count of objects per image, and stores it into a table called Count.DAPI.
+
+Note that this function does only work if in the Data.DAPI table the column 2 represents the object ID and the column 50 represents the condition. Otherwise you may need to adapt these numbers in the chunks below to the correct column. 
+
+The generated table is saved as a csv file.
+```{r}
+Count.DAPI <- Data.DAPI[1:length(unique(Data.DAPI$`Image name`)),c(1,2,50)]
+
+for(i in colnames(Count.DAPI)){
+  Count.DAPI[,i] <- rep(NA,length.out=length(Count.DAPI[,1]))
+}
+Count.DAPI[,1] <- unique(Data.DAPI$`Image name`)
+Count.DAPI[,3] <- Data.DAPI[match(unique(Data.DAPI$`Image name`), Data.DAPI$`Image name`),50]
+
+for(id in Count.DAPI$`Image name`){
+    Count.DAPI[Count.DAPI$`Image name` == id,2] <- max(as.numeric(Data.DAPI[Data.DAPI$`Image name` == id,2]))
+}
+
+head(Count.DAPI)
+
+write.csv(Count.DAPI,file = file.path(outputpath, "CountDAPI.csv"))
+```
+
+## Calculate the count of nuclei with a certaing Ki67 intensity.
+In the following chunk we are determinig the number of nuclei whose Median intensity in a certain fluorescence channel is above a fix threshold (here 2000).
+
+The column in Data.DAPI referring to the median intensity in our channel of interest was column 15 (channel C1). If you aim to read in the intensity from a different channel please adapt to another column number.
+
+Note that this function does only work if in the Data.DAPI table the column 50 represents the condition. Otherwise you may need to adapt this number. 
+
+The generated table is saved as a csv file.
+```{r}
+threshold = 2000
+
+Ki67_signal <- Data.DAPI[1:length(unique(Data.DAPI$`Image name`)),c(1,15,50)]
+
+for(i in colnames(Ki67_signal)){
+  Ki67_signal[,i] <- rep(NA,length.out=length(Ki67_signal[,1]))
+}
+Ki67_signal[,1] <- unique(Data.DAPI$`Image name`)
+Ki67_signal[,3] <- Data.DAPI[match(unique(Data.DAPI$`Image name`), Data.DAPI$`Image name`),50]
+
+for(id in Ki67_signal$`Image name`){
+    Ki67_signal[Ki67_signal$`Image name` == id,2] <- sum(Data.DAPI[Data.DAPI$`Image name` == id,15] > threshold, na.rm = T)
+}
+
+head(Ki67_signal)
+
+write.csv(Ki67_signal, file = file.path(outputpath,"Ki67.csv"))
+```
+
+# 3 - Adipogenic Index
+In this section, we determine the adipogenic index, i.e., the ratio of DAPI+ to lipid marker+ area in the images.
+
+## Calculate DAPI sum for 
+We have already read in the files refering to the DAPI channel and thus can directly determine the sum of the areas of all detected nuclei as the area that is DAPI+.
+
+```{r}
+Sum.DAPI <- Data.DAPI[1:length(unique(Data.DAPI$`Image name`)),c(1,10,50)]
+
+for(i in colnames(Sum.DAPI)){
+  Sum.DAPI[,i] <- rep(NA,length.out=length(Sum.DAPI[,1]))
+}
+Sum.DAPI[,1] <- unique(Data.DAPI$`Image name`)
+Sum.DAPI[,3] <- Data.DAPI[match(unique(Data.DAPI$`Image name`), Data.DAPI$`Image name`),50]
+
+for(id in Sum.DAPI$`Image name`){
+    Sum.DAPI[Sum.DAPI$`Image name` == id,2] <- sum(as.numeric(Data.DAPI[Data.DAPI$`Image name` == id,10]), na.rm = T)
+}
+
+head(Sum.DAPI)
+```
+
+# Analyze lipid marker data
+To determine the lipid marker + (e.g. Perilipin+ in this example) area, we need to read in the data from the respective AdipoQ Analysis first, similar to what we did for the DAPI data. Adapt the datapath variable according to your folder structure to refer to the folder containing the AdipoQ Analyzer output files from analysis of the lipid marker channel.
+
+To this end, the files list is created new based on the Link_Series.
+
+```{r}
+datapath <- "FILEPATH/TO/ADIPOQ-OUTPUT-FILES-LIPIDMARKER/"
+Link_Series$files = paste0(Link_Series$Plate, "_Sh_s", (Link_Series$ID), "_AQP_AQAs.txt")
+
+## Files to exclude
+Link_Series[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F),6]
+
+files = Link_Series$files
+files = files[!files %in% Link_Series$files[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F)]]
+
+## remaining files exist?
+table(file.exists(paste0(datapath,files)))
+
+files = files[file.exists(paste0(datapath,files))] 
+
+## remaining files
+files
+```
+
+## Load and merge data from lipid marker
+Now, data are important as for DAPI.
+```{r}
+Data.LD540 <- data.frame(read_delim(paste0(datapath, files[1]), "\t", escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:48]
+
+Data.LD540 <- Data.LD540[,]
+colnames(Data.LD540) <- colLabels
+Data.LD540$file <- files[1]
+#AllData$plate <- as.character(Link_Series[Link_Series$files==files[1],1])
+Data.LD540$condition <- as.character(Link_Series[Link_Series$files==files[1],3])
+Data.LD540$replicate <- as.character(Link_Series[Link_Series$files==files[1],4])
+
+for(id in files[2:length(files)]){
+  tryCatch(
+    expr = {
+        Data.Add.LD540 <- data.frame(read_delim(paste0(datapath, id), "\t", 
+                                 escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:48]
+        Data.Add.LD540 <- Data.Add.LD540[,]
+        colnames(Data.Add.LD540) <- colLabels
+        Data.Add.LD540$file <- id
+        Data.Add.LD540$condition <- as.character(Link_Series[Link_Series$files==id,3])
+        Data.Add.LD540$replicate <- as.character(Link_Series[Link_Series$files==id,4])
+      
+        Data.LD540 <- rbind(Data.LD540, Data.Add.LD540)
+    },
+    error = function(e){ 
+      # OPTIONAL
+    },
+    warning = function(w){
+      # OPTIONAL
+    },
+    finally = {
+        # OPTIONAL
+    }
+  )
+}
+
+head(Data.LD540)
+```
+
+## Calculate max number of lipid objects
+```{r}
+max = 0;
+Conditions <- unique(Data.LD540$condition)
+for(id in Conditions){
+  if(length(Data.LD540[Data.LD540$condition == id,1])>max){
+    max = length(Data.LD540[Data.LD540$condition ==id,1])
+  }
+}
+max
+```
+
+
+## Calculate the sum of lipid areas as the lipid+ area.
+```{r}
+Sum.LD540 <- Data.LD540[1:length(unique(Data.LD540$`Image name`)),c(1,10,50)]
+
+for(i in colnames(Sum.LD540)){
+  Sum.LD540[,i] <- rep(NA,length.out=length(Sum.LD540[,1]))
+}
+Sum.LD540[,1] <- unique(Data.LD540$`Image name`)
+Sum.LD540[,3] <- Data.LD540[match(unique(Data.LD540$`Image name`), Data.LD540$`Image name`),50]
+
+for(id in Sum.LD540$`Image name`){
+    Sum.LD540[Sum.LD540$`Image name` == id,2] <- sum(as.numeric(Data.LD540[Data.LD540$`Image name` == id,10]), na.rm = T)
+}
+
+head(Sum.LD540)
+```
+
+## Prepare data frames for merging
+```{r}
+names(Sum.LD540) [2] <- "Lipids Area"
+names(Sum.DAPI) [2] <- "DAPI Area"
+```
+
+## Merge and Calculate adipogenic index
+```{r}
+Merge.Data <- cbind(Sum.DAPI, Sum.LD540)
+Merge.Data$well <- NULL
+names(Merge.Data) [1] <- "Lipids"
+names(Merge.Data) [3] <- "DAPI"
+
+Merge.Data$AdipogenicIndex <- Merge.Data$`Lipids Area` / Merge.Data$`DAPI Area`
+```
+
+## Save as csv table for further manual plotting in plotting software.
+```{r}
+write.csv(Merge.Data, file = file.path(outputpath,"AdipogenicIndex.csv"))
+```
+
+# 4 - Calculating lipid droplet size for a frequency distribution
+In this chapter we will plot a frequency distribution of lipid droplet sizes.
+
+## Load link series for the respective files for making the distribution
+```{r}
+Link_Series <- read_excel("FILEPATH/TO/ADIPOQ-ANALYZER-OUTPUTFILES-TO-CREATE-SIZE-DISTRIBUTION/Link Series.xlsx", sheet = "plates")
+head(Link_Series)
+```
+
+## Load data for making size distribution
+Similar to above, first verify which files really exist and are not excluded and make a list of those for loading.
+```{r}
+datapath <- "FILEPATH/TO/ADIPOQ-ANALYZER-OUTPUTFILES-TO-CREATE-SIZE-DISTRIBUTION/"
+Link_Series$files = paste0(Link_Series$Plate, "_Sh_s", (Link_Series$ID), "_AQP_AQAs.txt")
+
+## Files to exclude
+Link_Series[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F),6]
+
+files = Link_Series$files
+files = files[!files %in% Link_Series$files[ifelse(!is.na(Link_Series$Exclude),Link_Series$Exclude == "X",F)]]
+
+## remaining files exist?
+table(file.exists(paste0(datapath,files)))
+
+files = files[file.exists(paste0(datapath,files))] 
+
+## remaining files
+files
+```
+
+Define the labels for the imported columns (for explanations, see above).
+```{r}
+colLabels <- data.frame(read.delim(paste0(datapath, files[1]), header=FALSE, comment.char="#"))[1,1:11]
+colLabels <- gsub(" \\[micron\\]","",gsub(" \\[micron\\^2\\]","",gsub(":","",as.character(unlist(colLabels)))))
+colLabels
+```
+
+## Load and merge data.
+As done for the other analyses above.
+```{r}
+AllData <- data.frame(read_delim(paste0(datapath, files[1]), "\t", escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:11]
+AllData <- AllData[,]
+colnames(AllData) <- colLabels
+AllData$file <- files[1]
+AllData$plate <- as.character(Link_Series[Link_Series$files==files[1],1])
+AllData$condition <- as.character(Link_Series[Link_Series$files==files[1],3])
+AllData$replicate <- as.character(Link_Series[Link_Series$files==files[1],4])
+
+for(id in files[2:length(files)]){
+  AllDataAdd <- data.frame(read_delim(paste0(datapath, id), "\t", 
+                                 escape_double = FALSE, col_names = F, trim_ws = TRUE, skip = 1))[,1:11]
+  AllDataAdd <- AllDataAdd[,]
+  colnames(AllDataAdd) <- colLabels
+  AllDataAdd$file <- id
+  AllDataAdd$plate <- as.character(Link_Series[Link_Series$files==id,1])
+  AllDataAdd$condition <- as.character(Link_Series[Link_Series$files==id,3])
+  AllDataAdd$replicate <- as.character(Link_Series[Link_Series$files==id,4])
+  
+  AllData <- rbind(AllData, AllDataAdd)
+}
+AllData$well <- paste0(AllData$plate," ",AllData$condition," ",AllData$replicate)
+head(AllData)
+```
+
+## Define columns of interest
+If you do not want to output results for a specific parameter, remove it from the cols list here.
+```{r}
+cols <- colnames(AllData)
+cols <- cols[cols!="Frame"]
+cols <- cols[cols!="Total.frames"]
+cols
+```
+
+## Filter data by voxel size
+If applicable, you can use this chunk to exclude obejcts below a certain sizeThreshold. The filter is only applied to image names containing the unique identifiers given in the vector uniqueWordsInFilenamesToBeProcessed.
+```{r}
+sizeThreshold <- 20
+uniqueWordsInFilenamesToBeProcessed <- c("DR_Exp02")
+
+for(uniqueWord in uniqueWordsInFilenamesToBeProcessed){
+  length(AllData[AllData$`Image name` %like% uniqueWord,1])
+  AllDataAdd <- AllData[AllData$`Image name` %like% uniqueWord & AllData$Voxels >= sizeThreshold,]
+  AllData <- AllData[!AllData$`Image name` %like% uniqueWord,]
+  AllData <- rbind(AllData, AllDataAdd)
+}
+```
+
+## Distinguishing filenames into different experimental conditions by words in filename
+Customize this function to your image names and/or conditions.
+```{r}
+AllData$TissueType <- "SVF-WAT"
+AllData[AllData$`Image name` %like% "DR_Exp02",]$TissueType <- "BM-WAT"
+AllData[AllData$`Image name` %like% "pBAT_test-02",]$TissueType <- "SVF-BAT"
+table(AllData$TissueType)
+```
+
+## Creating lipid droplets count table
+Define the bins of lipid droplet size for plotting a histogram in the vector ranges. 
+Next count occurences of lipid droplet sizes for each input sample and store in a table called CountTable.
+
+```{r}
+ranges <- c(1, 5, 10, 20, 30,40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 200, 300, 400, 500, 1000, Inf)
+
+CountTable <- data.frame(matrix(nrow = length(ranges)-1, ncol = (length(unique(AllData$TissueType))+1)))
+colnames(CountTable) <- c("range",unique(AllData$TissueType))
+
+for(i in 1:length(ranges)-1){
+  for(type in unique(AllData$TissueType)){
+   CountTable[i,type] <- length(AllData[AllData$TissueType == type & AllData$Area >= ranges [i] & AllData$Area < ranges [i+1],1])
+  }
+  CountTable[i,1] <- paste0(">= ",ranges [i]," & < ", ranges [i+1])
+}
+```
+
+## Normalizations.
+Normalize the lipid droplet count for each condition to the total number of input images per condition to express the data as number of droplets per image.
+```{r}
+CountTableNormalizedByImage <- CountTable
+for(type in unique(AllData$TissueType)){
+  print(paste0("Number of images for ",type,": ",length(unique(AllData[AllData$TissueType == type,]$`Image name`))))
+  CountTableNormalizedByImage[,type] <- CountTable[,type] / (length(unique(AllData[AllData$TissueType == type,]$`Image name`)))
+}
+```
+
+Normalize the frequency distribution of lipid droplet sizes to the total lipid area.
+```{r}
+FrequencyTable <- CountTable
+for(type in unique(AllData$TissueType)){
+  print(paste0(type,"Total number: ",sum(CountTable[,type])))
+  FrequencyTable[,type] <- CountTable[,type] / (sum(CountTable[,type]))
+}
+```
+
+## Make simple plot
+Plot the frequency distributions for the different experimental conditions into one plot.
+```{r}
+plotdata <- (FrequencyTable[,-1])
+rownames(plotdata) <- FrequencyTable$range
+plotdata <- data.frame(unlist(plotdata, use.names = TRUE))
+colnames(plotdata) <- "values"
+plotdata$range <- rep(FrequencyTable$range)
+plotdata$type <- rownames(plotdata)
+for(type in unique(AllData$TissueType)){
+    plotdata$type[plotdata$type %like% type] <- type
+}
+plot <- ggplot(plotdata,mapping = aes(x = plotdata$range,y = plotdata$values, color = type, shape = type)) + geom_point()
+
+print(plot)
+```
+
+## Save tables
+Store the differently normalized count tables as csv files.
+```{r}
+write.csv(CountTable, file=file.path(outputpath, "CountTable.csv"))
+write.csv(CountTableNormalizedByImage, file=file.path(outputpath, "CountTableNormalizedByImage.csv"))
+write.csv(FrequencyTable, file=file.path(outputpath, "FrequencyTable_1.csv"))
+```

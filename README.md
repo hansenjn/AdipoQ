@@ -32,7 +32,7 @@ If you encounter problems, error messages, or would like to suggest / contribute
 
 ## Copyright
 
-Copyright (C) 2019-2021: Jan N. Hansen.
+Copyright (C) 2019-2022: Jan N. Hansen.
 
 AdipoQ has been developed in the research group Biophysical Imaging, Institute of Innate Immunity, Bonn, Germany ([Lab Webpage](https://www.iiibonn.de/dagmar-wachten-lab/dagmar-wachten-lab-science)).
 

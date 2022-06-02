@@ -27,8 +27,9 @@ In addition, we provide a quick-start and an example guide for analyzing cells a
 -  Soon we will provide here also a quick-start guide for using machine-learning (StarDist)-based predictions to detect nuclei in AdipoQ (meanwhile, see the [Release notes for AdipoQ Preparator version v0.2.0](https://github.com/hansenjn/AdipoQ_Preparator/releases/tag/v0.2.0), where StarDist was first implemented)
 
 ### Analysis of histological images - guides
-- Quick-start guide that teaches you the most important information for a first try of AdipoQ on an image of HE-labeled adipose tissue: _(Currently prepared - Soon available)_
-- Example guide that walks you through the analysis of an example image of HE-labeled adipose tissue with AdipoQ: _(Currently prepared - Soon available)_. The image used in the guide can be downloaded here: _(Currently prepared - Soon available)_
+- [Quick-start guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20User%20Guide-QuickStart_histology_v2.pdf) that teaches you the most important information for a first try of AdipoQ on an image of HE-labeled adipose tissue.
+- [Example guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20Walk%20Through%20Guide_HE_v2.pdf) that walks you through the analysis of an example image of HE-labeled adipose tissue with AdipoQ. The image used in the guide can be downloaded here:
+    - [WT CD Test.tif](https://github.com/hansenjn/AdipoQ/raw/main/User%20Guide/Example%20Files%20Histology/WT%20CD%20Test.tif)
 
 ## How to cite?
 

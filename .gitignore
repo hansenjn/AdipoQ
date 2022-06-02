@@ -54,3 +54,6 @@ target/*
 
 # R related
 .Rhistory
+
+# HTML files
+*.html

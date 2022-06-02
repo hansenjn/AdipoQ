@@ -18,8 +18,8 @@ A comprehensive User Guide is available [here](https://github.com/hansenjn/Adipo
 In addition, we provide a quick-start and an example guide for analyzing cells and histological samples.
 
 ### Analysis of cultured cells - guides
--  [Quick-start guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide-QuickStart_fluorescent%20cells_v2.pdf) that teaches you the most important information for a first try of AdipoQ on an image of cultured cells.
--  [Example guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_Walk_Through_Guide_fluorescent_v2.pdf) that shows you how to analyze an exemplary fluorescence microscopy image of cultured adipocytes using AdipoQ. The images used in the guide can be downloaded here:
+-  [Quick-start guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20User%20Guide-QuickStart_fluorescent%20cells_v3.pdf) that teaches you the most important information for a first try of AdipoQ on an image of cultured cells.
+-  [Example guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20Walk%20Through%20Guide_fluorescent_v3.pdf) that shows you how to analyze an exemplary fluorescence microscopy image of cultured adipocytes using AdipoQ. The images used in the guide can be downloaded here:
     - [Day4-FI_Sh_s37.tif](https://github.com/hansenjn/AdipoQ/raw/main/User%20Guide/Example%20Files%20Cultured%20Cells/Day4-FI_Sh_s37.tif)
     - [Day0-ctrl_Sh_s174.tif](https://github.com/hansenjn/AdipoQ/raw/main/User%20Guide/Example%20Files%20Cultured%20Cells/Day0-ctrl_Sh_s174.tif)
 

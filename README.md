@@ -33,10 +33,10 @@ In addition, we provide a quick-start and an example guide for analyzing cells a
 
 ## How to cite?
 
-When using any of the AdipoQ plugins or R scripts, please cite the following paper:
+When using any of the AdipoQ plugins or R scripts, please cite the following preprint:
 
-    The paper is currently submitted for peer review. A citation and link will be provided here soon.
-    If you need to cite AdipoQ already now, please contact jan.hansen (at) uni-bonn.de.
+Katharina Sieckmann, Nora Winnerling, Mylene Huebecker, Philipp Leyendecker, Dalila Ribeiro, Thorsten Gnad, Alexander Pfeifer, Dagmar Wachten, Jan N. Hansen. AdipoQ – a simple, open-source software to quantify adipocyte morphology and function in tissues and in vitro. _bioRxiv_ 2022.06.04.494793. doi: https://doi.org/10.1101/2022.06.04.494793.
+
 
 ## Source code and issues
 

@@ -35,8 +35,7 @@ In addition, we provide a quick-start and an example guide for analyzing cells a
 
 When using any of the AdipoQ plugins or R scripts, please cite the following preprint:
 
-Katharina Sieckmann, Nora Winnerling, Mylene Huebecker, Philipp Leyendecker, Dalila Ribeiro, Thorsten Gnad, Alexander Pfeifer, Dagmar Wachten, Jan N. Hansen. AdipoQ – a simple, open-source software to quantify adipocyte morphology and function in tissues and in vitro. _bioRxiv_ 2022.06.04.494793. doi: https://doi.org/10.1101/2022.06.04.494793.
-
+Katharina Sieckmann, Nora Winnerling, Mylene Huebecker, Philipp Leyendecker, Dalila Juliana Silva Ribeiro, Thorsten Gnad, Alexander Pfeifer, Dagmar Wachten,  Jan N. Hansen. AdipoQ—a simple, open-source software to quantify adipocyte morphology and function in tissues and in vitro. Molecular Biology of the Cell 2022, 33:12. doi: https://doi.org/10.1091/mbc.E21-11-0592
 
 ## Source code and issues
 

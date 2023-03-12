@@ -15,8 +15,6 @@ All the tools are optimized for studying adipocytes in stained tissue or *in vit
 
 A comprehensive User Guide is available [here](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20230312.pdf).
 
-_(Note: The User Guide is currently not up-to-date with the latest versions of AdipoQ Analyzer. We will provide an updated version here very soon! Meanwhile, to see what changed for AdipoQ Analyzer since the section in the User Guide on AdipoQ Analyzer was written, pelase check out the release notes since Version 0.0.5 on the [release page for AdipoQ Analyzer](https://github.com/hansenjn/AdipoQ_Analyzer/releases). Alternatively, have a look at our up-to-date quick start guides below.)_
-
 In addition, we provide a quick-start and an example guide for analyzing cells and histological samples.
 
 ### Analysis of cultured cells - guides
@@ -24,7 +22,7 @@ In addition, we provide a quick-start and an example guide for analyzing cells a
 -  [Example guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20Walk%20Through%20Guide_fluorescent_v3.pdf) that walks you through the analysis of an example fluorescence microscopy image of cultured adipocytes using AdipoQ. The images used in the guide can be downloaded here:
     - [Day4-FI_Sh_s37.tif](https://github.com/hansenjn/AdipoQ/raw/main/User%20Guide/Example%20Files%20Cultured%20Cells/Day4-FI_Sh_s37.tif)
     - [Day0-ctrl_Sh_s174.tif](https://github.com/hansenjn/AdipoQ/raw/main/User%20Guide/Example%20Files%20Cultured%20Cells/Day0-ctrl_Sh_s174.tif)
--  Soon we will provide here also a quick-start guide for using machine-learning (StarDist)-based predictions to detect nuclei in AdipoQ. Meanwhile, please read the notes on StarDist for AdipoQ Preparator in the [main user guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20230312.pdf) and the [release notes for AdipoQ Analyzer versions v0.1.0 and v0.1.1](https://github.com/hansenjn/AdipoQ_Analyzer/releases/) as a guideline on how to use StarDist in AdipoQ Analyzer.
+-  Soon we will provide here also a quick-start guide for using machine-learning (StarDist)-based predictions to detect nuclei in AdipoQ. Meanwhile, please read the notes on StarDist in the [main user guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20230312.pdf).
 
 ### Analysis of histological images - guides
 - [Quick-start guide](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ%20User%20Guide-QuickStart_histology_v2.pdf) that teaches you the most important information for a first try of AdipoQ on an image of HE-labeled adipose tissue.

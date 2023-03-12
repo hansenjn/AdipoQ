@@ -13,9 +13,9 @@ All the tools are optimized for studying adipocytes in stained tissue or *in vit
 
 ## How to use?
 
-A comprehensive User Guide is available [here](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20211130.pdf).
+A comprehensive User Guide is available [here](https://github.com/hansenjn/AdipoQ/blob/main/User%20Guide/AdipoQ_User_Guide_V20230312.pdf).
 
-_(Note: The User Guide is currently not up-to-date with the latest versions of AdipoQ Preparator and Analyzer. We will provide an updated version here very soon! Meanwhile, to see what changed since 30th of November 2021, when this User Guide was written, check out the release notes of the plugins when downloading the plugins. Alternatively, have a look at our up-to-date quick start guides below.)_
+_(Note: The User Guide is currently not up-to-date with the latest versions of AdipoQ Analyzer. We will provide an updated version here very soon! Meanwhile, to see what changed for AdipoQ Analyzer since the section in the User Guide on AdipoQ Analyzer was written, pelase check out the release notes since Version 0.0.5 on the [release page for AdipoQ Analyzer](https://github.com/hansenjn/AdipoQ_Analyzer/releases). Alternatively, have a look at our up-to-date quick start guides below.)_
 
 In addition, we provide a quick-start and an example guide for analyzing cells and histological samples.
 
